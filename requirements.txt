@@ -1,0 +1,3 @@
+# Home Assistant provides aiohttp and voluptuous at runtime.
+# Extra pip packages belong in manifest.json "requirements" (currently none).
+homeassistant>=2024.8.0
