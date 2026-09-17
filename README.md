@@ -35,9 +35,13 @@ The integration is not in the HACS default catalog. Add it as a **custom reposit
 
 The password is the same as for the local login in the browser, often the last four digits of the serial number.
 
+![Setup dialog](docs/images/kermi_setup.png)
+
 ## Devices and entities
 
 The integration creates one device per x-center module:
+
+![Integration devices](docs/images/kermi_integration.png)
 
 | Device | Examples |
 | --- | --- |
@@ -63,7 +67,7 @@ Under **Configure**, you can set the polling interval (default 60 s, minimum 10 
 
 ## Credits
 
-The starting point for this custom component was [kermi-ha-bridge](https://github.com/m-zenker/kermi-ha-bridge) by [Martin Zenker](https://github.com/m-zenker) (MIT license) — an AppDaemon bridge to the local x-center HTTP API.
+The starting point for this custom integration was [kermi-ha-bridge](https://github.com/m-zenker/kermi-ha-bridge) by [Martin Zenker](https://github.com/m-zenker) (MIT license) - an AppDaemon bridge to the local x-center HTTP API.
 
 ## Maintainer
 
