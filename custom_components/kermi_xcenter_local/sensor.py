@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
+import math
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -44,6 +46,9 @@ from .const import (
 from .coordinator import KermiConfigEntry
 from .entity import KermiEntity
 
+_LOGGER = logging.getLogger(__name__)
+_WARNED_INVALID: set[tuple[str, str, str]] = set()
+
 
 def _lookup(device: KermiDeviceData, wkn: str | None, display_names: tuple[str, ...]) -> Any:
     if wkn and wkn in device.values:
@@ -67,33 +72,69 @@ def _hp_status(device: KermiDeviceData) -> str:
     return HP_STATUS_STANDBY
 
 
+def _to_number(value: Any) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        number = float(value)
+    elif isinstance(value, str):
+        text = value.strip().replace(",", ".")
+        if not text:
+            return None
+        try:
+            number = float(text)
+        except ValueError:
+            return None
+    else:
+        return None
+    if not math.isfinite(number):
+        return None
+    return number
+
+
 def _mapped(mapping: dict[int, str]) -> Callable[[KermiDeviceData, Any], Any]:
+    by_label = {label.lower(): label for label in mapping.values()}
+
     def _fn(_device: KermiDeviceData, value: Any) -> Any:
         if value is None:
             return None
-        try:
-            return mapping.get(int(value), str(value))
-        except (TypeError, ValueError):
-            return str(value)
+        if isinstance(value, bool):
+            return mapping.get(int(value))
+        if isinstance(value, str):
+            label = by_label.get(value.strip().lower())
+            if label is not None:
+                return label
+        number = _to_number(value)
+        if number is None:
+            return None
+        return mapping.get(int(number))
 
     return _fn
 
 
 def _clean_temp(_device: KermiDeviceData, value: Any) -> Any:
-    if not isinstance(value, (int, float)):
-        return value
-    if value < -60 or value > 200:
+    number = _to_number(value)
+    if number is None or number < -60 or number > 200:
         return None
-    return round(float(value), 1)
+    return round(number, 1)
 
 
 def _round(digits: int) -> Callable[[KermiDeviceData, Any], Any]:
     def _fn(_device: KermiDeviceData, value: Any) -> Any:
-        if not isinstance(value, (int, float)):
-            return value
-        return round(float(value), digits)
+        number = _to_number(value)
+        if number is None:
+            return None
+        return round(number, digits)
 
     return _fn
+
+
+def _warn_invalid(device_id: str, key: str, value: Any) -> None:
+    token = (device_id, key, repr(value))
+    if token in _WARNED_INVALID:
+        return
+    _WARNED_INVALID.add(token)
+    _LOGGER.warning("Ignoring invalid %s value %r", key, value)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -465,6 +506,7 @@ SENSORS: tuple[KermiSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        convert_fn=_round(2),
     ),
     KermiSensorDescription(
         key="freshwater_flow",
@@ -546,4 +588,21 @@ class KermiSensor(KermiEntity, SensorEntity):
             value = _lookup(device, desc.wkn, desc.display_names)
         if desc.convert_fn is not None:
             value = desc.convert_fn(device, value)
+        if desc.device_class == SensorDeviceClass.ENUM:
+            options = desc.options or []
+            if value is None:
+                return None
+            if value in options:
+                return value
+            _warn_invalid(self._device_id, desc.key, value)
+            return None
+        if (
+            desc.state_class
+            or desc.native_unit_of_measurement
+            or (desc.device_class and desc.device_class != SensorDeviceClass.ENUM)
+        ):
+            number = _to_number(value)
+            if value is not None and number is None:
+                _warn_invalid(self._device_id, desc.key, value)
+            return number
         return value

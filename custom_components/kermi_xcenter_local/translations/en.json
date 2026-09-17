@@ -54,10 +54,15 @@
         "name": "Heat pump state code",
         "state": {
           "standby": "Standby",
-          "heating": "Heating",
+          "alarm": "Alarm",
           "dhw": "Domestic hot water",
           "cooling": "Cooling",
-          "defrost": "Defrost"
+          "heating": "Heating",
+          "defrost": "Defrost",
+          "preparing": "Preparing",
+          "blocked": "Blocked",
+          "utility_lock": "Utility lock",
+          "unavailable": "Unavailable"
         }
       },
       "outside_temp": { "name": "Outdoor temperature" },

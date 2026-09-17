@@ -54,10 +54,15 @@
         "name": "Statuscode Wärmepumpe",
         "state": {
           "standby": "Bereitschaft",
-          "heating": "Heizen",
+          "alarm": "Alarm",
           "dhw": "Trinkwasser",
           "cooling": "Kühlen",
-          "defrost": "Abtauen"
+          "heating": "Heizen",
+          "defrost": "Abtauen",
+          "preparing": "Vorbereitung",
+          "blocked": "Blockiert",
+          "utility_lock": "EVU-Sperre",
+          "unavailable": "Nicht verfügbar"
         }
       },
       "outside_temp": { "name": "Außentemperatur" },

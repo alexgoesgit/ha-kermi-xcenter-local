@@ -69,6 +69,31 @@ def _sanitize(value: Any) -> Any:
     return value
 
 
+def _looks_numeric(value: Any) -> bool:
+    if isinstance(value, bool) or value is None:
+        return False
+    if isinstance(value, (int, float)):
+        return True
+    if isinstance(value, str):
+        try:
+            float(value.strip().replace(",", "."))
+        except ValueError:
+            return False
+        return True
+    return False
+
+
+def _extract_value(val_obj: dict[str, Any]) -> Any:
+    """Prefer a numeric payload over a display label such as 'Komfort'."""
+    value = val_obj.get("Value")
+    numeric = val_obj.get("NumericValue")
+    if _looks_numeric(value):
+        return _sanitize(value)
+    if numeric is not None:
+        return _sanitize(numeric)
+    return _sanitize(value)
+
+
 def _buffer_model(device: dict[str, Any]) -> str:
     wizard_str = (device.get("CustomProperties") or {}).get("WizardAnswer") or ""
     if wizard_str:
@@ -300,7 +325,7 @@ class KermiClient:
                     cfg = {}
                 if not isinstance(val_obj, dict):
                     val_obj = {}
-                value = _sanitize(val_obj.get("Value", val_obj.get("NumericValue")))
+                value = _extract_value(val_obj)
                 wkn = cfg.get("WellKnownName") or ""
                 display = cfg.get("DisplayName") or ""
                 if wkn and wkn not in device.values:

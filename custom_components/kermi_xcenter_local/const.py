@@ -44,10 +44,16 @@ SMART_GRID_MAP = {
     4: "max_boost",
 }
 
+# Rubin_CombinedHeatpumpState / Modbus register 200 (Unit 40)
 HP_STATE_MAP = {
     0: "standby",
-    1: "heating",
+    1: "alarm",
     2: "dhw",
     3: "cooling",
-    4: "defrost",
+    4: "heating",
+    5: "defrost",
+    6: "preparing",
+    7: "blocked",
+    8: "utility_lock",
+    9: "unavailable",
 }
