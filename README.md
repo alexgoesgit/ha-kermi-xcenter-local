@@ -59,6 +59,8 @@ Some diagnostic sensors (pressures, EQ temperatures, operating hours) are disabl
 
 Under **Configure**, you can set the polling interval (default 60 s, minimum 10 s).
 
+![Integration devices](docs/images/kermi_options.png)
+
 ## Notes
 
 - Home Assistant and the heat pump must be reachable on the same network.
