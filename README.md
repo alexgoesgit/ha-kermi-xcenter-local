@@ -50,3 +50,9 @@ Unter **Konfigurieren** lässt sich das Abfrageintervall setzen (Standard 60 s, 
 ## Maintainer
 
 [@alexgoesgit](https://github.com/alexgoesgit) — Issues: https://github.com/alexgoesgit/ha-kermi-xcenter-local/issues
+
+## Lizenz
+
+Apache License 2.0. Copyright 2026 alexgoesgit. Siehe [LICENSE](LICENSE).
+
+Kermi und x-center sind Marken des jeweiligen Inhabers. Diese Lizenz gewährt keine Markenrechte.
