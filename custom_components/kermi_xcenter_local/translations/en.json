@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kermi x-center",
+        "description": "Connect to the local x-center interface of your Kermi heat pump.",
+        "data": {
+          "host": "IP address or hostname",
+          "password": "Password",
+          "port": "Port"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Kermi",
+        "description": "The stored password was rejected. Enter the current x-center password.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not reach the x-center. Check IP address and network.",
+      "invalid_auth": "Login rejected. Check the password.",
+      "unknown": "Unexpected error. See the Home Assistant log."
+    },
+    "abort": {
+      "already_configured": "This x-center is already configured.",
+      "reauth_successful": "Password updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Kermi options",
+        "data": {
+          "scan_interval": "Update interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "hp_status": {
+        "name": "Heat pump status",
+        "state": {
+          "standby": "Standby",
+          "heating": "Heating",
+          "dhw": "Domestic hot water",
+          "cooling": "Cooling",
+          "defrost": "Defrost"
+        }
+      },
+      "hp_state": {
+        "name": "Heat pump state code",
+        "state": {
+          "standby": "Standby",
+          "heating": "Heating",
+          "dhw": "Domestic hot water",
+          "cooling": "Cooling",
+          "defrost": "Defrost"
+        }
+      },
+      "outside_temp": { "name": "Outdoor temperature" },
+      "outside_temp_avg": { "name": "Average outdoor temperature" },
+      "flow_temp": { "name": "Flow temperature" },
+      "return_temp": { "name": "Return temperature" },
+      "electrical_power": { "name": "Electrical power" },
+      "thermal_power": { "name": "Thermal output" },
+      "cop": { "name": "COP" },
+      "cop_heating": { "name": "COP heating" },
+      "cop_dhw": { "name": "COP DHW" },
+      "heating_power": { "name": "Heating output" },
+      "dhw_power": { "name": "DHW output" },
+      "flow_rate": { "name": "Flow rate" },
+      "compressor_speed": { "name": "Compressor speed" },
+      "compressor_hours": { "name": "Compressor operating hours" },
+      "hot_gas_temp": { "name": "Hot-gas temperature" },
+      "high_pressure": { "name": "High pressure" },
+      "low_pressure": { "name": "Low pressure" },
+      "source_inlet_temp": { "name": "Source inlet temperature" },
+      "source_outlet_temp": { "name": "Source outlet temperature" },
+      "pv_available_power": { "name": "PV available power" },
+      "buffer_temp": { "name": "Buffer temperature" },
+      "buffer_setpoint": { "name": "Buffer setpoint" },
+      "dhw_temp": { "name": "DHW temperature" },
+      "dhw_setpoint": { "name": "DHW setpoint" },
+      "heating_circuit_temp": { "name": "Heating circuit temperature" },
+      "energy_mode": {
+        "name": "Energy mode",
+        "state": {
+          "off": "Off",
+          "eco": "Eco",
+          "normal": "Normal",
+          "comfort": "Comfort",
+          "custom": "Custom"
+        }
+      },
+      "heater_power": { "name": "Backup heater power" },
+      "mixer_position": { "name": "Mixer position" },
+      "freshwater_temp": { "name": "Tap temperature" },
+      "freshwater_setpoint": { "name": "Tap setpoint" },
+      "freshwater_power": { "name": "Tap power" },
+      "freshwater_energy": { "name": "Tap energy" },
+      "freshwater_flow": { "name": "Tap flow" },
+      "freshwater_circulation_temp": { "name": "Circulation temperature" },
+      "smart_grid": {
+        "name": "SmartGrid",
+        "state": {
+          "blocking": "Blocking",
+          "normal": "Normal",
+          "boost": "Boost",
+          "max_boost": "Max boost"
+        }
+      }
+    },
+    "binary_sensor": {
+      "is_heating": { "name": "Heating" },
+      "is_dhw": { "name": "DHW" },
+      "is_cooling": { "name": "Cooling" },
+      "is_defrosting": { "name": "Defrosting" },
+      "charging_pump": { "name": "Storage charging pump" },
+      "pv_modulation": { "name": "PV modulation" },
+      "summer_mode": { "name": "Summer mode" },
+      "dhw_oneshot": { "name": "One-time DHW" },
+      "heater_pv": { "name": "Backup heater PV" },
+      "evu_lock": { "name": "EVU lock" },
+      "presence": { "name": "Presence" }
+    }
+  }
+}

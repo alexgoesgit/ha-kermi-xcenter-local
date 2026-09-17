@@ -1,0 +1,20 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+.env
+.env.*
+*.log
+
+# Diagnose dumps (can contain live plant data)
+output.json
+output2.json
+outside.json
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

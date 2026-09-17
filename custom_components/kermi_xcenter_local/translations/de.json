@@ -1,0 +1,130 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kermi x-center",
+        "description": "Verbinde die lokale x-center Schnittstelle deiner Kermi-Wärmepumpe.",
+        "data": {
+          "host": "IP-Adresse oder Hostname",
+          "password": "Passwort",
+          "port": "Port"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Kermi erneut anmelden",
+        "description": "Das gespeicherte Passwort wurde abgelehnt. Bitte das aktuelle x-center Passwort eingeben.",
+        "data": {
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "x-center nicht erreichbar. IP-Adresse und Netzwerk prüfen.",
+      "invalid_auth": "Login abgelehnt. Passwort prüfen.",
+      "unknown": "Unerwarteter Fehler. Siehe Home-Assistant-Protokoll."
+    },
+    "abort": {
+      "already_configured": "Dieses x-center ist bereits eingerichtet.",
+      "reauth_successful": "Passwort aktualisiert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Kermi-Optionen",
+        "data": {
+          "scan_interval": "Aktualisierungsintervall (Sekunden)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "hp_status": {
+        "name": "Status Wärmepumpe",
+        "state": {
+          "standby": "Bereitschaft",
+          "heating": "Heizen",
+          "dhw": "Trinkwasser",
+          "cooling": "Kühlen",
+          "defrost": "Abtauen"
+        }
+      },
+      "hp_state": {
+        "name": "Statuscode Wärmepumpe",
+        "state": {
+          "standby": "Bereitschaft",
+          "heating": "Heizen",
+          "dhw": "Trinkwasser",
+          "cooling": "Kühlen",
+          "defrost": "Abtauen"
+        }
+      },
+      "outside_temp": { "name": "Außentemperatur" },
+      "outside_temp_avg": { "name": "Gemittelte Außentemperatur" },
+      "flow_temp": { "name": "Vorlauftemperatur WP" },
+      "return_temp": { "name": "Rücklauftemperatur WP" },
+      "electrical_power": { "name": "Elektrische Leistung" },
+      "thermal_power": { "name": "Wärmeleistung" },
+      "cop": { "name": "COP" },
+      "cop_heating": { "name": "COP Heizen" },
+      "cop_dhw": { "name": "COP TWE" },
+      "heating_power": { "name": "Leistung Heizen" },
+      "dhw_power": { "name": "Leistung TWE" },
+      "flow_rate": { "name": "Durchfluss WP" },
+      "compressor_speed": { "name": "Verdichterdrehzahl" },
+      "compressor_hours": { "name": "Betriebsstunden Verdichter" },
+      "hot_gas_temp": { "name": "Heißgastemperatur" },
+      "high_pressure": { "name": "Hochdruck" },
+      "low_pressure": { "name": "Niederdruck" },
+      "source_inlet_temp": { "name": "EQ Eintrittstemperatur" },
+      "source_outlet_temp": { "name": "EQ Austrittstemperatur" },
+      "pv_available_power": { "name": "PV verfügbare Leistung" },
+      "buffer_temp": { "name": "Puffertemperatur" },
+      "buffer_setpoint": { "name": "Puffersollwert" },
+      "dhw_temp": { "name": "Isttemperatur TWE" },
+      "dhw_setpoint": { "name": "Solltemperatur TWE" },
+      "heating_circuit_temp": { "name": "Vorlauftemperatur Heizkreis" },
+      "energy_mode": {
+        "name": "Energiemodus",
+        "state": {
+          "off": "Aus",
+          "eco": "Eco",
+          "normal": "Normal",
+          "comfort": "Komfort",
+          "custom": "Benutzerdefiniert"
+        }
+      },
+      "heater_power": { "name": "Leistung ext. WEZ" },
+      "mixer_position": { "name": "Mischeröffnung" },
+      "freshwater_temp": { "name": "Zapftemperatur" },
+      "freshwater_setpoint": { "name": "Zapfsollwert" },
+      "freshwater_power": { "name": "Zapfleistung" },
+      "freshwater_energy": { "name": "Wärmemenge Frischwasser" },
+      "freshwater_flow": { "name": "Durchfluss Zapfung" },
+      "freshwater_circulation_temp": { "name": "Zirkulationstemperatur" },
+      "smart_grid": {
+        "name": "SmartGrid",
+        "state": {
+          "blocking": "Sperre",
+          "normal": "Normal",
+          "boost": "Boost",
+          "max_boost": "Maximal"
+        }
+      }
+    },
+    "binary_sensor": {
+      "is_heating": { "name": "Heizen" },
+      "is_dhw": { "name": "Trinkwasser" },
+      "is_cooling": { "name": "Kühlen" },
+      "is_defrosting": { "name": "Abtauen" },
+      "charging_pump": { "name": "Speicherladepumpe" },
+      "pv_modulation": { "name": "PV-Modulation" },
+      "summer_mode": { "name": "Sommerbetrieb" },
+      "dhw_oneshot": { "name": "Einmalladung TWE" },
+      "heater_pv": { "name": "PV-Betrieb ext. WEZ" },
+      "evu_lock": { "name": "EVU-Sperre" },
+      "presence": { "name": "Anwesenheit" }
+    }
+  }
+}
