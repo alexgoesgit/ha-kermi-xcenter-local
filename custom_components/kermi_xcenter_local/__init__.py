@@ -6,6 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import KermiConfigEntry, KermiCoordinator
+from .entity import async_register_hub_device
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -13,6 +14,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: KermiConfigEntry) -> bool:
     coordinator = KermiCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
+    async_register_hub_device(coordinator)
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))

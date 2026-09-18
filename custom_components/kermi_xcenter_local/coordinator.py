@@ -41,6 +41,7 @@ class KermiCoordinator(DataUpdateCoordinator[dict[str, KermiDeviceData]]):
         except TypeError:
             super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=interval)
         self.entry = entry
+        self.hub_registry_id: str | None = None
         self.client = KermiClient(
             host=entry.data[CONF_HOST],
             password=entry.data[CONF_PASSWORD],
