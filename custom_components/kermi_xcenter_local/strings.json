@@ -33,7 +33,13 @@
       "init": {
         "title": "Kermi options",
         "data": {
-          "scan_interval": "Update interval (seconds)"
+          "scan_interval": "Update interval (seconds)",
+          "all_datapoints": "Create an entity for every datapoint",
+          "include_settings": "Include settings"
+        },
+        "data_description": {
+          "all_datapoints": "Creates an entity for every datapoint the x-center exposes (diagnostic category).",
+          "include_settings": "Also expose settings (heating curve, thresholds, operating modes) as read-only sensors."
         }
       }
     }
@@ -47,7 +53,11 @@
           "heating": "Heating",
           "dhw": "Domestic hot water",
           "cooling": "Cooling",
-          "defrost": "Defrost"
+          "defrost": "Defrost",
+          "preparing": "Preparing",
+          "blocked": "Blocked",
+          "utility_lock": "Utility lock",
+          "alarm": "Alarm"
         }
       },
       "hp_state": {

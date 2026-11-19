@@ -14,7 +14,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .client import KermiDeviceData
+from .auto import (
+    KIND_BINARY,
+    attributes,
+    classify,
+    curated_identifiers,
+    is_problem,
+    options_enabled,
+    selectable,
+)
+from .client import KermiDatapoint, KermiDeviceData
 from .const import (
     DEVICE_TYPE_BUFFER,
     DEVICE_TYPE_HEAT_PUMP,
@@ -126,7 +135,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
-    entities: list[KermiBinarySensor] = []
+    entities: list[BinarySensorEntity] = []
     for device_id, device in coordinator.data.items():
         for description in BINARY_SENSORS:
             if description.device_types and device.device_type not in description.device_types:
@@ -134,6 +143,18 @@ async def async_setup_entry(
             if description.wkn not in device.values:
                 continue
             entities.append(KermiBinarySensor(coordinator, device_id, description))
+
+    create_all, include_settings = options_enabled(entry)
+    if create_all:
+        curated_wkns, curated_names = curated_identifiers()
+        for device_id, device in coordinator.data.items():
+            for datapoint in sorted(device.datapoints.values(), key=lambda dp: dp.sort):
+                if classify(datapoint) != KIND_BINARY:
+                    continue
+                if not selectable(datapoint, curated_wkns, curated_names, include_settings):
+                    continue
+                entities.append(KermiAutoBinarySensor(coordinator, device_id, datapoint))
+
     async_add_entities(entities)
 
 
@@ -151,5 +172,37 @@ class KermiBinarySensor(KermiEntity, BinarySensorEntity):
             return None
         value = _lookup(device, self.entity_description.wkn)
         if value is None:
+            return None
+        return bool(value)
+
+
+class KermiAutoBinarySensor(KermiEntity, BinarySensorEntity):
+    """Any boolean datapoint without a curated description."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator, device_id: str, datapoint: KermiDatapoint) -> None:
+        super().__init__(coordinator, device_id, f"dp_{datapoint.config_id}")
+        self._config_id = datapoint.config_id
+        self._attr_name = datapoint.name
+        self._attr_extra_state_attributes = attributes(datapoint)
+        if is_problem(datapoint):
+            self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+
+    @property
+    def is_on(self) -> bool | None:
+        device = self.device_data
+        if device is None:
+            return None
+        datapoint = device.datapoints.get(self._config_id)
+        if datapoint is None or datapoint.value is None:
+            return None
+        value = datapoint.value
+        if isinstance(value, str):
+            text = value.strip().lower()
+            if text in ("ja", "ein", "true", "1"):
+                return True
+            if text in ("nein", "aus", "false", "0"):
+                return False
             return None
         return bool(value)

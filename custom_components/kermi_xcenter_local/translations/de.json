@@ -33,7 +33,13 @@
       "init": {
         "title": "Kermi-Optionen",
         "data": {
-          "scan_interval": "Aktualisierungsintervall (Sekunden)"
+          "scan_interval": "Aktualisierungsintervall (Sekunden)",
+          "all_datapoints": "Alle Datenpunkte als Entitäten anlegen",
+          "include_settings": "Einstellwerte einschliessen"
+        },
+        "data_description": {
+          "all_datapoints": "Legt für jeden Datenpunkt, den das x-center liefert, eine Entität an (Diagnose-Kategorie).",
+          "include_settings": "Zusätzlich die Einstellwerte (Heizkurve, Schwellen, Betriebsarten) als schreibgeschützte Sensoren."
         }
       }
     }
@@ -47,7 +53,11 @@
           "heating": "Heizen",
           "dhw": "Trinkwasser",
           "cooling": "Kühlen",
-          "defrost": "Abtauen"
+          "defrost": "Abtauen",
+          "preparing": "Vorbereitung",
+          "blocked": "Blockiert",
+          "utility_lock": "EVU-Sperre",
+          "alarm": "Alarm"
         }
       },
       "hp_state": {
