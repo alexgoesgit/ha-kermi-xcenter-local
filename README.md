@@ -55,9 +55,36 @@ COP values are `unknown` while the compressor is off (the controller then return
 
 Some diagnostic sensors (pressures, EQ temperatures, operating hours) are disabled by default and can be enabled in the entity list.
 
+### Every datapoint
+
+Beyond the curated entities above, the integration creates one entity for **every** datapoint the x-center returns — roughly 200 on a heat pump with two heating circuits. The client already fetched them all; this just exposes them. They are classified from the metadata the API ships with each datapoint:
+
+| `DatapointType` | Becomes |
+| --- | --- |
+| Boolean | `binary_sensor` (device class `problem` when the name mentions Störung/Alarm/Fehler/Warnung) |
+| Int with `PossibleValues` | `sensor` with device class `enum`, states are the controller's own labels; the numeric code stays in the `raw_value` attribute |
+| Int / Float | `sensor` with device class, unit and state class derived from `Unit` — counters (`h`, `kWh`, "Betriebsstunden", "Anzahl …") become `total_increasing` |
+| String | plain `sensor` |
+
+These entities use the controller's German display names, land in the **Diagnostic** category, and are recorded like any other entity. Each carries `datapoint_config_id`, `well_known_name` and — where the datapoint lives in a device register rather than in the x-center itself — `modbus_address` as attributes, so an entity can be mapped back onto the Modbus register map.
+
+This makes the heat pump's full diagnostic layer available: `Status Wärmepumpe` including the `Blockiert` state, the compressor start inhibits (registers 1100/1128) and the 13 operating-limit flags for heating (registers 1101/1102), plus `Status ext. WEZ Heizen` and the external-heat-generator relays.
+
+**Settings are read-only here.** Datapoints the x-center hides behind an installer user level are not returned by the API and therefore cannot appear, whatever this integration does.
+
+### Diagnostics
+
+**Download diagnostics** on the config entry writes every datapoint with its value, unit, category, config ID, Modbus address and possible values to a JSON file.
+
 ## Options
 
-Under **Configure**, you can set the polling interval (default 60 s, minimum 10 s).
+Under **Configure**:
+
+| Option | Default | Effect |
+| --- | --- | --- |
+| Update interval | 60 s | Polling interval, minimum 10 s |
+| Create an entity for every datapoint | on | Turns the automatic discovery above on or off |
+| Include settings | on | Also expose Category 1 datapoints (heating curve thresholds, operating modes, offsets) |
 
 ![Integration devices](docs/images/kermi_options.png)
 

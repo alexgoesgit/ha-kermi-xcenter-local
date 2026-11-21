@@ -38,6 +38,27 @@ class KermiConnectionError(KermiError):
 
 
 @dataclass
+class KermiDatapoint:
+    """One datapoint with the metadata the x-center ships alongside it."""
+
+    config_id: str
+    name: str
+    wkn: str | None
+    unit: str
+    category: int
+    data_type: int
+    possible_values: dict[str, str]
+    address: str | None
+    sort: int
+    description: str
+    value: Any = None
+
+    @property
+    def is_setting(self) -> bool:
+        return self.category == 1
+
+
+@dataclass
 class KermiDeviceData:
     """One x-center device with its live datapoints."""
 
@@ -49,6 +70,7 @@ class KermiDeviceData:
     model: str
     values: dict[str, Any] = field(default_factory=dict)
     display_values: dict[str, Any] = field(default_factory=dict)
+    datapoints: dict[str, KermiDatapoint] = field(default_factory=dict)
 
 
 def _as_list(obj: Any) -> list[Any]:
@@ -334,6 +356,47 @@ class KermiClient:
                     device.display_values[display] = value
                 if not device.device_type and cfg.get("DeviceType"):
                     device.device_type = int(cfg["DeviceType"])
+                self._ingest_datapoint(device, cfg, value)
+
+    @staticmethod
+    def _ingest_datapoint(device: KermiDeviceData, cfg: dict[str, Any], value: Any) -> None:
+        """Keep the full config of every datapoint, not just its value."""
+        config_id = cfg.get("DatapointConfigId")
+        if not config_id:
+            return
+        existing = device.datapoints.get(config_id)
+        if existing is not None:
+            existing.value = value
+            return
+        possible = cfg.get("PossibleValues")
+        if not isinstance(possible, dict):
+            possible = {}
+        address = cfg.get("Address")
+        try:
+            sort = int(cfg.get("Sort") or 0)
+        except (TypeError, ValueError):
+            sort = 0
+        try:
+            data_type = int(cfg.get("DatapointType") or 0)
+        except (TypeError, ValueError):
+            data_type = 0
+        try:
+            category = int(cfg.get("Category") or 0)
+        except (TypeError, ValueError):
+            category = 0
+        device.datapoints[config_id] = KermiDatapoint(
+            config_id=config_id,
+            name=(cfg.get("DisplayName") or "").strip() or config_id,
+            wkn=cfg.get("WellKnownName") or None,
+            unit=(cfg.get("Unit") or "").strip(),
+            category=category,
+            data_type=data_type,
+            possible_values={str(k): str(v) for k, v in possible.items()},
+            address=str(address) if address else None,
+            sort=sort,
+            description=(cfg.get("Description") or "").strip(),
+            value=value,
+        )
 
     async def _request(
         self,

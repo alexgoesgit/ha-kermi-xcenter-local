@@ -18,6 +18,19 @@ DEVICE_TYPE_FRESH_WATER = 104
 
 CONF_SCAN_INTERVAL = "scan_interval"
 
+# Create an entity for every datapoint the x-center exposes, not just the
+# curated ones. Settings (Category 1) can be left out separately.
+CONF_ALL_DATAPOINTS = "all_datapoints"
+CONF_INCLUDE_SETTINGS = "include_settings"
+DEFAULT_ALL_DATAPOINTS = True
+DEFAULT_INCLUDE_SETTINGS = True
+
+# Config.DatapointType as delivered by the API
+DP_TYPE_INT = 0
+DP_TYPE_FLOAT = 1
+DP_TYPE_BOOL = 2
+DP_TYPE_STRING = 3
+
 # WizardAnswer.PowermoduleFunctionType on BufferSystem devices
 BUFFER_FUNCTION_HEATING = 1
 BUFFER_FUNCTION_DHW = 2

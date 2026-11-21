@@ -28,7 +28,21 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .client import KermiDeviceData
+from .auto import (
+    KIND_ENUM,
+    KIND_NUMERIC,
+    KIND_TEXT,
+    attributes,
+    classify,
+    curated_identifiers,
+    enum_label,
+    enum_options,
+    numeric_traits,
+    options_enabled,
+    plausible,
+    selectable,
+)
+from .client import KermiDatapoint, KermiDeviceData
 from .const import (
     DEVICE_TYPE_BUFFER,
     DEVICE_TYPE_FRESH_WATER,
@@ -59,7 +73,30 @@ def _lookup(device: KermiDeviceData, wkn: str | None, display_names: tuple[str, 
     return None
 
 
-def _hp_status(device: KermiDeviceData) -> str:
+# The controller's own status word knows states the four activity flags cannot
+# express — above all "blocked", which otherwise looks exactly like standby.
+HP_STATUS_OPTIONS = [
+    HP_STATUS_STANDBY,
+    HP_STATUS_HEATING,
+    HP_STATUS_DHW,
+    HP_STATUS_COOLING,
+    HP_STATUS_DEFROST,
+    "preparing",
+    "blocked",
+    "utility_lock",
+    "alarm",
+]
+
+
+def _hp_status(device: KermiDeviceData) -> str | None:
+    code = _to_number(device.values.get("Rubin_CombinedHeatpumpState"))
+    if code is not None:
+        state = HP_STATE_MAP.get(int(code))
+        if state in HP_STATUS_OPTIONS:
+            return state
+        if state == "unavailable":
+            # Reserved in HA; an enum sensor may not report it as a state.
+            return None
     values = device.values
     if values.get("Rubin_IsDefrostingState") or values.get("Rubin_IsDefrosting"):
         return HP_STATUS_DEFROST
@@ -155,13 +192,7 @@ SENSORS: tuple[KermiSensorDescription, ...] = (
         translation_key="hp_status",
         device_types=(DEVICE_TYPE_HEAT_PUMP,),
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            HP_STATUS_STANDBY,
-            HP_STATUS_HEATING,
-            HP_STATUS_DHW,
-            HP_STATUS_COOLING,
-            HP_STATUS_DEFROST,
-        ],
+        options=HP_STATUS_OPTIONS,
         value_fn=_hp_status,
         icon="mdi:heat-pump",
     ),
@@ -559,11 +590,26 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = entry.runtime_data
-    entities: list[KermiSensor] = []
+    entities: list[SensorEntity] = []
     for device_id, device in coordinator.data.items():
         for description in SENSORS:
             if _applies(description, device):
                 entities.append(KermiSensor(coordinator, device_id, description))
+
+    create_all, include_settings = options_enabled(entry)
+    if create_all:
+        curated_wkns, curated_names = curated_identifiers()
+        for device_id, device in coordinator.data.items():
+            for datapoint in sorted(device.datapoints.values(), key=lambda dp: dp.sort):
+                if not selectable(datapoint, curated_wkns, curated_names, include_settings):
+                    continue
+                kind = classify(datapoint)
+                if kind == KIND_ENUM:
+                    entities.append(KermiAutoEnumSensor(coordinator, device_id, datapoint))
+                elif kind in (KIND_NUMERIC, KIND_TEXT):
+                    entities.append(KermiAutoSensor(coordinator, device_id, datapoint))
+        _LOGGER.debug("Kermi: %s sensor entities after auto-discovery", len(entities))
+
     async_add_entities(entities)
 
 
@@ -606,3 +652,79 @@ class KermiSensor(KermiEntity, SensorEntity):
                 _warn_invalid(self._device_id, desc.key, value)
             return number
         return value
+
+
+class _KermiAutoBase(KermiEntity, SensorEntity):
+    """Common wiring for an entity built from datapoint metadata."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator, device_id: str, datapoint: KermiDatapoint) -> None:
+        super().__init__(coordinator, device_id, f"dp_{datapoint.config_id}")
+        self._config_id = datapoint.config_id
+        self._attr_name = datapoint.name
+        self._attr_extra_state_attributes = attributes(datapoint)
+
+    @property
+    def datapoint(self) -> KermiDatapoint | None:
+        device = self.device_data
+        if device is None:
+            return None
+        return device.datapoints.get(self._config_id)
+
+
+class KermiAutoSensor(_KermiAutoBase):
+    """Any numeric or textual datapoint without a curated description."""
+
+    def __init__(self, coordinator, device_id: str, datapoint: KermiDatapoint) -> None:
+        super().__init__(coordinator, device_id, datapoint)
+        self._numeric = classify(datapoint) == KIND_NUMERIC
+        if self._numeric:
+            device_class, unit, state_class = numeric_traits(datapoint)
+            self._attr_device_class = device_class
+            self._attr_native_unit_of_measurement = unit
+            self._attr_state_class = state_class
+
+    @property
+    def native_value(self) -> StateType:
+        datapoint = self.datapoint
+        if datapoint is None:
+            return None
+        value = datapoint.value
+        if not self._numeric:
+            return None if value is None else str(value)[:255]
+        number = _to_number(value)
+        if number is None:
+            return None
+        if not plausible(datapoint, number):
+            return None
+        return round(number, 3)
+
+
+class KermiAutoEnumSensor(_KermiAutoBase):
+    """A datapoint whose PossibleValues give it a readable state."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+
+    def __init__(self, coordinator, device_id: str, datapoint: KermiDatapoint) -> None:
+        super().__init__(coordinator, device_id, datapoint)
+        self._attr_options = enum_options(datapoint)
+
+    @property
+    def native_value(self) -> StateType:
+        datapoint = self.datapoint
+        if datapoint is None:
+            return None
+        label = enum_label(datapoint, datapoint.value)
+        if label is None and datapoint.value is not None:
+            _warn_invalid(self._device_id, datapoint.name, datapoint.value)
+        return label
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Keep the raw code alongside the label — automations want the number."""
+        data = dict(self._attr_extra_state_attributes)
+        datapoint = self.datapoint
+        if datapoint is not None:
+            data["raw_value"] = datapoint.value
+        return data

@@ -12,7 +12,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .client import KermiAuthError, KermiClient, KermiConnectionError, KermiError
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_ALL_DATAPOINTS,
+    CONF_INCLUDE_SETTINGS,
+    DEFAULT_ALL_DATAPOINTS,
+    DEFAULT_INCLUDE_SETTINGS,
+    DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -105,23 +113,29 @@ class KermiConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class KermiOptionsFlow(OptionsFlow):
-    """Scan interval options."""
+    """Scan interval and entity coverage."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        current = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL,
-            int(DEFAULT_SCAN_INTERVAL.total_seconds()),
-        )
+        options = self.config_entry.options
+        current = options.get(CONF_SCAN_INTERVAL, int(DEFAULT_SCAN_INTERVAL.total_seconds()))
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_SCAN_INTERVAL, default=current): vol.All(
                         vol.Coerce(int), vol.Range(min=10, max=600)
-                    )
+                    ),
+                    vol.Required(
+                        CONF_ALL_DATAPOINTS,
+                        default=options.get(CONF_ALL_DATAPOINTS, DEFAULT_ALL_DATAPOINTS),
+                    ): bool,
+                    vol.Required(
+                        CONF_INCLUDE_SETTINGS,
+                        default=options.get(CONF_INCLUDE_SETTINGS, DEFAULT_INCLUDE_SETTINGS),
+                    ): bool,
                 }
             ),
         )
